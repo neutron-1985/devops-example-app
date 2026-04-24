@@ -75,3 +75,5 @@ multiarch-push-app:
 
 multiarch-push-caddy:
 	docker buildx build --platform linux/amd64,linux/arm64 -t hexletcomponents/devops-example-caddy -f services/caddy/Dockerfile --push .
+
+#Просто коммент для тестового пуша
