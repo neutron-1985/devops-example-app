@@ -1,13 +1,13 @@
 # DevOps example app
 
-![CI status](https://github.com/hexlet-components/devops-example-app/actions/workflows/main.yml/badge.svg) [![Count docker images pulls](https://img.shields.io/docker/pulls/hexletcomponents/devops-example-app.svg)](https://hub.docker.com/r/hexletcomponents/devops-example-app)
+![CI status](https://github.com/hexlet-components/devops-example-app/actions/workflows/main.yml/badge.svg) [![Count docker images pulls](https://img.shields.io/docker/pulls/neutron1985/devops-example-app.svg)](https://hub.docker.com/r/neutron1985/devops-example-app)
 
 This is a simple node application that shows on the main page server on which it is running and report errors to [Rollbar](https://rollbar.com/).
 
 ## Usage
 
 ```bash
-docker run -p 3000:3000 -e SERVER_MESSAGE="Hexlet Awesome Server" -e ROLLBAR_TOKEN="<your token>" hexletcomponents/devops-example-app
+docker run -p 3000:3000 -e SERVER_MESSAGE="Hexlet Awesome Server" -e ROLLBAR_TOKEN="<your token>" neutron1985/devops-example-app
 # open http://0.0.0.0:3000 in browser
  ```
 
@@ -26,7 +26,7 @@ docker: no matching manifest for linux/arm64/v8 in the manifest list entries.
 ```sh
 docker run --platform linux/amd64 -p 3000:3000 \
     -e SERVER_MESSAGE="Hexlet Awesome Server" \
-    hexletcomponents/devops-example-app
+    neutron1985/devops-example-app
 ```
 
 Docker Desktop для Mac M1/M2 поддерживает эмуляцию x86 (amd64) через QEMU. Это работает для большинства Node.js-приложений, но может быть медленнее.
@@ -34,16 +34,16 @@ Docker Desktop для Mac M1/M2 поддерживает эмуляцию x86 (a
 ### 2. Собрать образ локально под ARM
 
 ```sh
-docker build -t hexletcomponents/devops-example-app .
+docker build -t neutron1985/devops-example-app .
 docker run -p 3000:3000 \
     -e SERVER_MESSAGE="Hexlet Awesome Server" \
-    hexletcomponents/devops-example-app
+    neutron1985/devops-example-app
 ```
 
 ### 3. Собрать и опубликовать multi-arch образ (рекомендовано)
 
 ```sh
-docker buildx build --platform linux/amd64,linux/arm64 -t hexletcomponents/devops-example-app --push .
+docker buildx build --platform linux/amd64,linux/arm64 -t neutron1985/devops-example-app --push .
 ```
 
 После этого команда `docker run ...` будет работать на любой архитектуре.
