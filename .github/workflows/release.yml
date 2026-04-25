@@ -3,7 +3,7 @@ name: release
 on:
   create:
     tags:
-      - v*
+      - 'v*'
 
 env:
   APP_IMAGE_NAME: neutron1985/devops-example-app
@@ -13,19 +13,31 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      # - uses: actions/checkout@v2
-      # - uses: docker/setup-qemu-action@v1
-      # - uses: docker/setup-buildx-action@v1
+      - uses: actions/checkout@v4
 
-      - uses: docker/login-action@v2
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - run: docker pull ${{ env.APP_IMAGE_NAME }}:latest
-      - run: docker tag ${{ env.APP_IMAGE_NAME }}:latest ${{ env.APP_IMAGE_NAME }}:${{ github.ref_name }}
-      - run: docker push ${{ env.APP_IMAGE_NAME }}:${{ github.ref_name }}
+      - name: Build and push app
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.APP_IMAGE_NAME }}:${{ github.ref_name }}
+            ${{ env.APP_IMAGE_NAME }}:sha-${{ github.sha }}
 
-      - run: docker pull ${{ env.CADDY_IMAGE_NAME }}:latest
-      - run: docker tag ${{ env.CADDY_IMAGE_NAME }}:latest ${{ env.CADDY_IMAGE_NAME }}:${{ github.ref_name }}
-      - run: docker push ${{ env.CADDY_IMAGE_NAME }}:${{ github.ref_name }}
+      - name: Build and push caddy
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/caddy/Dockerfile
+          push: true
+          tags: |
+            ${{ env.CADDY_IMAGE_NAME }}:${{ github.ref_name }}
+            ${{ env.CADDY_IMAGE_NAME }}:sha-${{ github.sha }}
