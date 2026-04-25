@@ -7,6 +7,17 @@
     - community.docker.docker_network:
         name: devops-example
 
+    - ansible.builtin.file:
+        path: "{{ caddy_config_dir }}"
+        state: directory
+        mode: "0755"
+
+    - ansible.builtin.template:
+        src: templates/Caddyfile.j2
+        dest: "{{ caddy_config_dir }}/Caddyfile"
+        mode: "0644"
+      register: caddy_config
+
     - community.docker.docker_container:
         name: app
         # Обязатлеьно указываем тег, который хотим деплоить
@@ -22,17 +33,22 @@
           - name: devops-example
         # Делаем доступным снаружи
         ports:
-          - 3000:3000
+          - "{{ app_port }}:3000"
         env: # Настраиваем
           NODE_ENV: production
+          SERVER_MESSAGE: "Hello from {{ inventory_hostname }}"
+
 
     - community.docker.docker_container:
         name: caddy
         image: "neutron1985/devops-example-caddy:{{ version }}"
         restart_policy: always
+        restart: "{{ caddy_config.changed }}"
         state: started
         networks:
           - name: devops-example
         ports:
           - 80:80
           - 443:443
+        volumes:
+          - "{{ caddy_config_dir }}/Caddyfile:/etc/caddy/Caddyfile:ro"
