@@ -18,7 +18,22 @@ localhost, devops-example.test {
 		# app - имя домена во внутренней сети Docker
 		# В девелопменте совпадает с именем сервиса в docker-compose.yml
 		# Для продакшена надо будет создать общую сеть
-		reverse_proxy app:3000
+		reverse_proxy app:3000 {
+
+			# Если backend вернул / вызвал 502
+			@error status 502
+
+			handle_response @error {
+				# Папка с html-страницами ошибок
+				root * /app/services/caddy/error_pages
+
+				# Подменяем путь на файл ошибки
+				rewrite * /502.html
+
+				# Отдаем файл пользователю
+				file_server
+			}
+		}
 	}
 
 	# Включаем логгирование для удобной отладки
