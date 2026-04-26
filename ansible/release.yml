@@ -1,22 +1,11 @@
 ---
 
-- hosts: all
+- hosts: webservers
   gather_facts: no
   tasks:
 
     - community.docker.docker_network:
         name: devops-example
-
-    - ansible.builtin.file:
-        path: "{{ caddy_config_dir }}"
-        state: directory
-        mode: "0755"
-
-    - ansible.builtin.template:
-        src: templates/Caddyfile.j2
-        dest: "{{ caddy_config_dir }}/Caddyfile"
-        mode: "0644"
-      register: caddy_config
 
     - community.docker.docker_container:
         name: app
@@ -33,11 +22,31 @@
           - name: devops-example
         # Делаем доступным снаружи
         ports:
-          - "{{ app_port }}:3000"
+          - "{{ app_port | default(3000) }}:3000"
         env: # Настраиваем
           NODE_ENV: production
           SERVER_MESSAGE: "Hello from {{ inventory_hostname }}"
 
+
+- hosts: loadbalancers
+  gather_facts: no
+  vars:
+    caddy_config_path: "{{ caddy_config_dir | default('/home/' ~ (ansible_user | default(ansible_ssh_user)) ~ '/devops-example-app/caddy') }}"
+  tasks:
+
+    - community.docker.docker_network:
+        name: devops-example
+
+    - ansible.builtin.file:
+        path: "{{ caddy_config_path }}"
+        state: directory
+        mode: "0755"
+
+    - ansible.builtin.template:
+        src: templates/Caddyfile.j2
+        dest: "{{ caddy_config_path }}/Caddyfile"
+        mode: "0644"
+      register: caddy_config
 
     - community.docker.docker_container:
         name: caddy
@@ -47,8 +56,6 @@
         state: started
         networks:
           - name: devops-example
-        ports:
-          - 80:80
-          - 443:443
+        ports: "{{ caddy_ports | default(['80:80']) }}"
         volumes:
-          - "{{ caddy_config_dir }}/Caddyfile:/etc/caddy/Caddyfile:ro"
+          - "{{ caddy_config_path }}/Caddyfile:/etc/caddy/Caddyfile:ro"

@@ -1,0 +1,36 @@
+{% set domains = caddy_domains | default(['localhost', 'devops-example.test']) %}
+{{ domains | join(', ') }} {
+{% if caddy_tls_internal | default(false) %}
+	tls internal
+{% endif %}
+
+	handle /images/* {
+		file_server
+		root * /app/public
+	}
+
+	handle {
+		reverse_proxy {
+{% for backend in groups['webservers'] %}
+			to {{ hostvars[backend].caddy_backend_host | default(hostvars[backend].app_host | default(hostvars[backend].ansible_host | default(backend))) }}:{{ hostvars[backend].caddy_backend_port | default(hostvars[backend].app_port | default(app_port | default(3000))) }}
+{% endfor %}
+			lb_policy round_robin
+			lb_try_duration 10s
+			lb_try_interval 250ms
+			health_uri /
+			health_interval 10s
+
+			@error status 502
+
+			handle_response @error {
+				root * /app/services/caddy/error_pages
+				rewrite * /502.html
+				file_server
+			}
+		}
+	}
+
+	log {
+		format json
+	}
+}
